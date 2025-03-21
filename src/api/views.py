@@ -78,24 +78,59 @@ class SetClientToRandomAdminView(APIView):
             logger.info("Wrong request format.")
             return Response(EmptyResponseData().model_dump(), status=status.HTTP_400_BAD_REQUEST)
 
-
-class FreeAdminAndDeleteClientView(APIView):
+class FreeAdminView(APIView):
     def post(self, request: Request): # noqa
         try:
             correlation_id_ctx.set(request.META.get('HTTP_X_CORRELATION_ID'))
 
             body = FreeAdminRequestData.model_validate(request.POST.dict())
-            free_admin_and_clear_client(AdminCredentials(tg_id=body.tg_id))
+            free_admin(AdminCredentials(tg_id=body.tg_id))
 
-            logger.info("Admin free and client deleted.")
+            logger.info("Admin free.")
             return Response(EmptyResponseData().model_dump(), status=status.HTTP_200_OK)
-
         except HTTPException:
-            logger.info("No such admin or client.")
+            logger.info("No such admin.")
             return Response(EmptyResponseData().model_dump(), status=status.HTTP_400_BAD_REQUEST)
         except ValidationError:
             logger.info("Wrong request format.")
             return Response(EmptyResponseData().model_dump(), status=status.HTTP_400_BAD_REQUEST)
+
+
+class ClearClientView(APIView):
+    def post(self, request: Request):  # noqa
+        try:
+            correlation_id_ctx.set(request.META.get('HTTP_X_CORRELATION_ID'))
+
+            body = FreeAdminRequestData.model_validate(request.POST.dict())
+            clear_client_by_admin_creds(AdminCredentials(tg_id=body.tg_id))
+
+            logger.info("Admin free.")
+            return Response(EmptyResponseData().model_dump(), status=status.HTTP_200_OK)
+        except HTTPException:
+            logger.info("No such admin.")
+            return Response(EmptyResponseData().model_dump(), status=status.HTTP_400_BAD_REQUEST)
+        except ValidationError:
+            logger.info("Wrong request format.")
+            return Response(EmptyResponseData().model_dump(), status=status.HTTP_400_BAD_REQUEST)
+
+
+# class FreeAdminAndDeleteClientView(APIView):
+#     def post(self, request: Request): # noqa
+#         try:
+#             correlation_id_ctx.set(request.META.get('HTTP_X_CORRELATION_ID'))
+#
+#             body = FreeAdminRequestData.model_validate(request.POST.dict())
+#             free_admin_and_clear_client(AdminCredentials(tg_id=body.tg_id))
+#
+#             logger.info("Admin free and client deleted.")
+#             return Response(EmptyResponseData().model_dump(), status=status.HTTP_200_OK)
+#
+#         except HTTPException:
+#             logger.info("No such admin or client.")
+#             return Response(EmptyResponseData().model_dump(), status=status.HTTP_400_BAD_REQUEST)
+#         except ValidationError:
+#             logger.info("Wrong request format.")
+#             return Response(EmptyResponseData().model_dump(), status=status.HTTP_400_BAD_REQUEST)
 
 
 class GetCurrentClientView(APIView):

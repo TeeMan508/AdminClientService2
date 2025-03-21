@@ -1,6 +1,6 @@
 from .get import get_random_free_admin, get_unhandled_client
 from .register import register_client, register_admin
-from .free_admin_clear_client import free_admin_and_clear_client
+from .free_admin_clear_client import free_admin, clear_client_by_admin_creds
 from .set_client_to_random_admin import set_client_to_random_admin
 from .get_current_client import get_current_client
 from .get_admin_by_client import get_admin_by_client
