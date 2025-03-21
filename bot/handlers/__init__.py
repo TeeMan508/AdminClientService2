@@ -1,1 +1,0 @@
-from bot.handlers.command.router import router
