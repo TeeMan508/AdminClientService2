@@ -14,6 +14,7 @@ from ...urls import REGISTER_ADMIN_URL, SET_NEXT_CLIENT_TO_ADMIN_URL
 
 class AdminState(StatesGroup):
     active = State()
+    busy = State()
 
 
 @router.callback_query(F.data == "register_admin")

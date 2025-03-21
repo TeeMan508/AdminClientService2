@@ -29,7 +29,7 @@ async def register_client_and_send_complaint(message: Message, state: FSMContext
     headers = {
         "X-CORRELATION-ID" : uid
     }
-
+    # TODO: надо разделить удаление клиента и освобождение админа - удалять в handle_complaint а освобождать в next_client
     logger.info("Registering client...")
     async with ClientSession() as session:
         async with session.post(url=REGISTER_CLIENT_URL, data=body, headers=headers) as response:

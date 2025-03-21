@@ -38,15 +38,7 @@ async def send_answer_to_client(message: Message, state: FSMContext) -> None:
 
     await bot.send_message(int(client_id), message.text)
 
-    async with ClientSession() as session:
-        async with session.post(url=FREE_ADMIN_URL, data={"tg_id": message.chat.id}, headers=headers) as response:
-            try:
-                response.raise_for_status()
-            except ClientResponseError as e:
-                text = f"{ERROR_MESSAGE}: {e}"
-                await message.answer(text)
-                return
-
+    # await state.set_state(AdminState.busy)
     builder = InlineKeyboardBuilder()
     builder.add(InlineKeyboardButton(text=NEXT_CLIENT_BUTTON_TEXT, callback_data="next_client"))
     await message.answer(NEXT_CLIENT_TEXT, reply_markup=builder.as_markup())

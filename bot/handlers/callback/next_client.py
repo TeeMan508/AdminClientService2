@@ -8,17 +8,19 @@ from aiogram import F
 from aiohttp import ClientSession, ClientResponseError
 from starlette.exceptions import HTTPException
 
+from .admin import AdminState
 from .router import router
 from ...logger import logger, correlation_id_ctx
-from ...messages import NO_CLIENT_MSG
+from ...messages import NO_CLIENT_MSG, ERROR_MESSAGE
 
-from ...urls import SET_NEXT_CLIENT_TO_ADMIN_URL
+from ...urls import SET_NEXT_CLIENT_TO_ADMIN_URL, FREE_ADMIN_URL
 
 
 @router.callback_query(F.data == "next_client")
 async def get_next_client_complaint(callback_query: CallbackQuery, state: FSMContext):
     if callback_query.message.from_user is None:
         return
+    # await state.set_state(AdminState.active)
 
     body = {
         "tg_id" : callback_query.message.chat.id,
@@ -28,6 +30,15 @@ async def get_next_client_complaint(callback_query: CallbackQuery, state: FSMCon
     headers = {
         "X-CORRELATION-ID": uid
     }
+
+    async with ClientSession() as session:
+        async with session.post(url=FREE_ADMIN_URL, data=body, headers=headers) as response:
+            try:
+                response.raise_for_status()
+            except ClientResponseError as e:
+                text = f"{ERROR_MESSAGE}: {e}"
+                await callback_query.message.answer(text)
+                return
 
     async with ClientSession() as session:
         async with session.post(url=SET_NEXT_CLIENT_TO_ADMIN_URL, data=body, headers=headers) as response:
