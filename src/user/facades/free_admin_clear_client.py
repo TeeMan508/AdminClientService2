@@ -4,7 +4,7 @@ from ..schemas import AdminCredentials
 
 
 def free_admin(admin_creds: AdminCredentials):
-    tarnished = get_admin_(tg_id=admin_creds.tg_id).first()
+    tarnished = get_admin_(tg_id=admin_creds.tg_id)
 
     tarnished.is_busy = False
     tarnished.save()

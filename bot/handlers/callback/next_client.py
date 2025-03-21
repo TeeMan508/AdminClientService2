@@ -11,7 +11,7 @@ from starlette.exceptions import HTTPException
 from .admin import AdminState
 from .router import router
 from ...logger import logger, correlation_id_ctx
-from ...messages import NO_CLIENT_MSG, ERROR_MESSAGE
+from ...messages import NO_CLIENT_MSG, ERROR_MESSAGE, NO_CLIENT_BUT_ADMIN_IS_ACTIVE_MSG
 
 from ...urls import SET_NEXT_CLIENT_TO_ADMIN_URL, FREE_ADMIN_URL
 
@@ -47,12 +47,13 @@ async def get_next_client_complaint(callback_query: CallbackQuery, state: FSMCon
                 response_data = await response.json()
                 unhandled_client_complaint = response_data["complaint"]
             except ClientResponseError:
-                await callback_query.message.answer(NO_CLIENT_MSG)
+                await callback_query.message.answer(NO_CLIENT_BUT_ADMIN_IS_ACTIVE_MSG)
+                await callback_query.message.edit_reply_markup(None)
                 return
 
     try:
         await callback_query.message.edit_reply_markup(None)
-        await callback_query.answer(unhandled_client_complaint)
+        await callback_query.message.answer(unhandled_client_complaint)
     except TelegramBadRequest:
         ...
 
