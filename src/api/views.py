@@ -6,7 +6,10 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .logger import logger, correlation_id_ctx
-from ..user.facades import *
+from ..user.exceptions.base import NoEntityException, BusyAdminException, AlreadyExistsException
+from ..user.facades import admin__get_current_client, client__set_to_random_admin
+from ..user.facades.admin import admin__register, admin__free, admin__get_by_client, admin__set_next_client
+from ..user.facades.client import client__register, client__delete_by_admin
 from ..user.schemas.request import (RegisterAdminRequestData,
                                     RegisterClientRequestData,
                                     SetClientToAdminRequestData,
@@ -26,17 +29,17 @@ class RegisterAdminView(APIView):
 
             body = RegisterAdminRequestData.model_validate(request.POST.dict())
             creds = AdminCredentials.model_validate(body.model_dump())
-            register_admin(creds)
+            admin__register(creds)
 
             logger.info("Admin registered.")
             return Response(EmptyResponseData().model_dump(), status=status.HTTP_200_OK)
 
-        except HTTPException:
+        except AlreadyExistsException:
             logger.info("Admin already registered.")
-            return Response(EmptyResponseData().model_dump(), status=status.HTTP_400_BAD_REQUEST)
+            return Response(EmptyResponseData().model_dump(), status=status.HTTP_409_CONFLICT)
         except ValidationError:
             logger.info("Wrong request format.")
-            return Response(EmptyResponseData().model_dump(), status=status.HTTP_400_BAD_REQUEST)
+            return Response(EmptyResponseData().model_dump(), status=status.HTTP_422_UNPROCESSABLE_ENTITY)
 
 
 class RegisterClientView(APIView):
@@ -46,17 +49,17 @@ class RegisterClientView(APIView):
 
             body = RegisterClientRequestData.model_validate(request.POST.dict())
             creds = ClientCredentials.model_validate(body.model_dump())
-            register_client(creds)
+            client__register(creds)
 
             logger.info("Client registered.")
             return Response(EmptyResponseData().model_dump(), status=status.HTTP_200_OK)
 
-        except HTTPException:
+        except AlreadyExistsException:
             logger.info("Client already registered.")
-            return Response(EmptyResponseData().model_dump(), status=status.HTTP_400_BAD_REQUEST)
+            return Response(EmptyResponseData().model_dump(), status=status.HTTP_409_CONFLICT)
         except ValidationError:
             logger.info("Wrong request format.")
-            return Response(EmptyResponseData().model_dump(), status=status.HTTP_400_BAD_REQUEST)
+            return Response(EmptyResponseData().model_dump(), status=status.HTTP_422_UNPROCESSABLE_ENTITY)
 
 
 class SetClientToRandomAdminView(APIView):
@@ -65,18 +68,18 @@ class SetClientToRandomAdminView(APIView):
             correlation_id_ctx.set(request.META.get('HTTP_X_CORRELATION_ID'))
 
             body = SetClientToAdminRequestData.model_validate(request.POST.dict())
-            admin_id = set_client_to_random_admin(body.tg_id)
+            admin_id = client__set_to_random_admin(body.tg_id)
             response_model = IdResponseData.model_validate({"tg_id": admin_id})
 
             logger.info("Client set to admin.")
             return Response(response_model.model_dump(), status=status.HTTP_200_OK)
 
-        except HTTPException:
+        except NoEntityException:
             logger.info("No free admins.")
-            return Response(EmptyResponseData().model_dump(), status=status.HTTP_400_BAD_REQUEST)
+            return Response(EmptyResponseData().model_dump(), status=status.HTTP_409_CONFLICT)
         except ValidationError:
             logger.info("Wrong request format.")
-            return Response(EmptyResponseData().model_dump(), status=status.HTTP_400_BAD_REQUEST)
+            return Response(EmptyResponseData().model_dump(), status=status.HTTP_422_UNPROCESSABLE_ENTITY)
 
 class FreeAdminView(APIView):
     def post(self, request: Request): # noqa
@@ -84,16 +87,16 @@ class FreeAdminView(APIView):
             correlation_id_ctx.set(request.META.get('HTTP_X_CORRELATION_ID'))
 
             body = FreeAdminRequestData.model_validate(request.POST.dict())
-            free_admin(AdminCredentials(tg_id=body.tg_id))
+            admin__free(AdminCredentials(tg_id=body.tg_id))
 
             logger.info("Admin free.")
             return Response(EmptyResponseData().model_dump(), status=status.HTTP_200_OK)
-        except HTTPException:
+        except NoEntityException:
             logger.info("No such admin.")
-            return Response(EmptyResponseData().model_dump(), status=status.HTTP_400_BAD_REQUEST)
+            return Response(EmptyResponseData().model_dump(), status=status.HTTP_409_CONFLICT)
         except ValidationError:
             logger.info("Wrong request format.")
-            return Response(EmptyResponseData().model_dump(), status=status.HTTP_400_BAD_REQUEST)
+            return Response(EmptyResponseData().model_dump(), status=status.HTTP_422_UNPROCESSABLE_ENTITY)
 
 
 class ClearClientView(APIView):
@@ -102,36 +105,16 @@ class ClearClientView(APIView):
             correlation_id_ctx.set(request.META.get('HTTP_X_CORRELATION_ID'))
 
             body = FreeAdminRequestData.model_validate(request.POST.dict())
-            clear_client_by_admin_creds(AdminCredentials(tg_id=body.tg_id))
+            client__delete_by_admin(AdminCredentials(tg_id=body.tg_id))
 
-            logger.info("Admin free.")
+            logger.info("client deleted.")
             return Response(EmptyResponseData().model_dump(), status=status.HTTP_200_OK)
-        except HTTPException:
-            logger.info("No such admin.")
-            return Response(EmptyResponseData().model_dump(), status=status.HTTP_400_BAD_REQUEST)
+        except NoEntityException:
+            logger.info("No such client.")
+            return Response(EmptyResponseData().model_dump(), status=status.HTTP_409_CONFLICT)
         except ValidationError:
             logger.info("Wrong request format.")
-            return Response(EmptyResponseData().model_dump(), status=status.HTTP_400_BAD_REQUEST)
-
-
-# class FreeAdminAndDeleteClientView(APIView):
-#     def post(self, request: Request): # noqa
-#         try:
-#             correlation_id_ctx.set(request.META.get('HTTP_X_CORRELATION_ID'))
-#
-#             body = FreeAdminRequestData.model_validate(request.POST.dict())
-#             free_admin_and_clear_client(AdminCredentials(tg_id=body.tg_id))
-#
-#             logger.info("Admin free and client deleted.")
-#             return Response(EmptyResponseData().model_dump(), status=status.HTTP_200_OK)
-#
-#         except HTTPException:
-#             logger.info("No such admin or client.")
-#             return Response(EmptyResponseData().model_dump(), status=status.HTTP_400_BAD_REQUEST)
-#         except ValidationError:
-#             logger.info("Wrong request format.")
-#             return Response(EmptyResponseData().model_dump(), status=status.HTTP_400_BAD_REQUEST)
-
+            return Response(EmptyResponseData().model_dump(), status=status.HTTP_422_UNPROCESSABLE_ENTITY)
 
 class GetCurrentClientView(APIView):
     def get(self, request: Request): # noqa
@@ -139,18 +122,18 @@ class GetCurrentClientView(APIView):
             correlation_id_ctx.set(request.META.get('HTTP_X_CORRELATION_ID'))
 
             body = GetClientRequestData.model_validate(request.data.dict())
-            client_id = get_current_client(body.tg_id)
+            client_id = admin__get_current_client(body.tg_id)
             response_model = IdResponseData.model_validate({"tg_id": client_id})
 
             logger.info("Client found.")
             return Response(response_model.model_dump(), status=status.HTTP_200_OK)
 
-        except HTTPException:
+        except NoEntityException:
             logger.info("No current client.")
-            return Response(EmptyResponseData().model_dump(), status=status.HTTP_400_BAD_REQUEST)
+            return Response(EmptyResponseData().model_dump(), status=status.HTTP_409_CONFLICT)
         except ValidationError:
             logger.info("Wrong request format.")
-            return Response(EmptyResponseData().model_dump(), status=status.HTTP_400_BAD_REQUEST)
+            return Response(EmptyResponseData().model_dump(), status=status.HTTP_422_UNPROCESSABLE_ENTITY)
 
 
 
@@ -160,18 +143,18 @@ class GetAdminByClientView(APIView):
             correlation_id_ctx.set(request.META.get('HTTP_X_CORRELATION_ID'))
 
             body = GetAdminByClientRequestData.model_validate(request.data.dict())
-            admin_id = get_admin_by_client(body.tg_id)
+            admin_id = admin__get_by_client(body.tg_id)
             response_model = IdResponseData.model_validate({"tg_id": admin_id})
 
             logger.info("Admin found.")
             return Response(response_model.model_dump(), status=status.HTTP_200_OK)
 
-        except HTTPException:
+        except NoEntityException:
             logger.info(f"No such admin found for client")
-            return Response(EmptyResponseData().model_dump(), status=status.HTTP_400_BAD_REQUEST)
+            return Response(EmptyResponseData().model_dump(), status=status.HTTP_409_CONFLICT)
         except ValidationError:
             logger.info("Wrong request format.")
-            return Response(EmptyResponseData().model_dump(), status=status.HTTP_400_BAD_REQUEST)
+            return Response(EmptyResponseData().model_dump(), status=status.HTTP_422_UNPROCESSABLE_ENTITY)
 
 
 class SetNextClientToAdminView(APIView):
@@ -180,14 +163,17 @@ class SetNextClientToAdminView(APIView):
             correlation_id_ctx.set(request.META.get('HTTP_X_CORRELATION_ID'))
 
             body = SetNextClientRequestData.model_validate(request.POST.dict())
-            complaint = set_next_client_to_admin(body.tg_id)
+            complaint = admin__set_next_client(body.tg_id)
             response_model = ComplaintResponse.model_validate({"complaint": complaint})
             logger.info("Next client set to admin.")
             return Response(response_model.model_dump(), status=status.HTTP_200_OK)
 
-        except HTTPException:
+        except NoEntityException:
             logger.info("No unhandled clients.")
-            return Response(EmptyResponseData().model_dump(), status=status.HTTP_400_BAD_REQUEST)
+            return Response(EmptyResponseData().model_dump(), status=status.HTTP_409_CONFLICT)
+        except BusyAdminException:
+            logger.info("Admin is still busy.")
+            return Response(EmptyResponseData().model_dump(), status=status.HTTP_409_CONFLICT)
         except ValidationError:
             logger.info("Wrong request format.")
-            return Response(EmptyResponseData().model_dump(), status=status.HTTP_400_BAD_REQUEST)
+            return Response(EmptyResponseData().model_dump(), status=status.HTTP_422_UNPROCESSABLE_ENTITY)

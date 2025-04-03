@@ -14,6 +14,7 @@ from ...logger import logger, correlation_id_ctx
 from ...messages import NO_CLIENT_MSG, ERROR_MESSAGE, NO_CLIENT_BUT_ADMIN_IS_ACTIVE_MSG
 
 from ...urls import SET_NEXT_CLIENT_TO_ADMIN_URL, FREE_ADMIN_URL
+from ...utils.correlated_client_session import ClientSessionCorId
 
 
 @router.callback_query(F.data == "next_client")
@@ -25,14 +26,10 @@ async def get_next_client_complaint(callback_query: CallbackQuery, state: FSMCon
     body = {
         "tg_id" : callback_query.message.chat.id,
     }
-    uid = str(uuid4())
-    correlation_id_ctx.set(uid)
-    headers = {
-        "X-CORRELATION-ID": uid
-    }
 
-    async with ClientSession() as session:
-        async with session.post(url=FREE_ADMIN_URL, data=body, headers=headers) as response:
+
+    async with ClientSessionCorId() as session:
+        async with session.post(url=FREE_ADMIN_URL, data=body) as response:
             try:
                 response.raise_for_status()
             except ClientResponseError as e:
@@ -40,8 +37,8 @@ async def get_next_client_complaint(callback_query: CallbackQuery, state: FSMCon
                 await callback_query.message.answer(text)
                 return
 
-    async with ClientSession() as session:
-        async with session.post(url=SET_NEXT_CLIENT_TO_ADMIN_URL, data=body, headers=headers) as response:
+    async with ClientSessionCorId() as session:
+        async with session.post(url=SET_NEXT_CLIENT_TO_ADMIN_URL, data=body) as response:
             try:
                 response.raise_for_status()
                 response_data = await response.json()

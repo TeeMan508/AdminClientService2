@@ -11,6 +11,7 @@ from ...logger import logger, correlation_id_ctx
 from ...messages import ERROR_MESSAGE, REGISTER_CLIENT_MSG, NO_ADMIN_MSG
 from ...urls import REGISTER_CLIENT_URL, SET_CLIENT_TO_ADMIN_URL
 from ..callback.client import ClientState
+from ...utils.correlated_client_session import ClientSessionCorId
 
 
 @router.message(ClientState.active)
@@ -24,15 +25,11 @@ async def register_client_and_send_complaint(message: Message, state: FSMContext
         "complaint" : message.text,
         "tg_id": str(message.chat.id),
     }
-    uid = str(uuid4())
-    correlation_id_ctx.set(uid)
-    headers = {
-        "X-CORRELATION-ID" : uid
-    }
+
     # TODO: надо разделить удаление клиента и освобождение админа - удалять в handle_complaint а освобождать в next_client
     logger.info("Registering client...")
-    async with ClientSession() as session:
-        async with session.post(url=REGISTER_CLIENT_URL, data=body, headers=headers) as response:
+    async with ClientSessionCorId() as session:
+        async with session.post(url=REGISTER_CLIENT_URL, data=body) as response:
             try:
                 response.raise_for_status()
             except ClientResponseError as e:
@@ -41,8 +38,8 @@ async def register_client_and_send_complaint(message: Message, state: FSMContext
                 return
 
     logger.info("Setting client to admin...")
-    async with ClientSession() as session:
-        async with session.post(url=SET_CLIENT_TO_ADMIN_URL, data=body, headers=headers) as response:
+    async with ClientSessionCorId() as session:
+        async with session.post(url=SET_CLIENT_TO_ADMIN_URL, data=body) as response:
             try:
                 response.raise_for_status()
                 data = await response.json()

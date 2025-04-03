@@ -11,6 +11,8 @@ from .router import router
 from ...logger import logger, correlation_id_ctx
 from ...messages import ERROR_MESSAGE, REGISTER_ADMIN_MSG, NO_CLIENT_MSG
 from ...urls import REGISTER_ADMIN_URL, SET_NEXT_CLIENT_TO_ADMIN_URL
+from ...utils.correlated_client_session import ClientSessionCorId
+
 
 class AdminState(StatesGroup):
     active = State()
@@ -26,16 +28,10 @@ async def register_admin(callback_query: CallbackQuery, state: FSMContext):
         "tg_id" : str(callback_query.message.chat.id),
     }
 
-    uid = str(uuid4())
-    correlation_id_ctx.set(uid)
-    headers = {
-        "X-CORRELATION-ID": uid
-    }
-
     logger.info("Registering admin...")
     text = REGISTER_ADMIN_MSG
-    async with ClientSession() as session:
-        async with session.post(url=REGISTER_ADMIN_URL, data=body, headers=headers) as response:
+    async with ClientSessionCorId() as session:
+        async with session.post(url=REGISTER_ADMIN_URL, data=body) as response:
             try:
                 response.raise_for_status()
             except ClientResponseError as e:
@@ -44,8 +40,8 @@ async def register_admin(callback_query: CallbackQuery, state: FSMContext):
                 return
 
     logger.info("Setting client to admin...")
-    async with ClientSession() as session:
-        async with session.post(url=SET_NEXT_CLIENT_TO_ADMIN_URL, data=body, headers=headers) as response:
+    async with ClientSessionCorId() as session:
+        async with session.post(url=SET_NEXT_CLIENT_TO_ADMIN_URL, data=body) as response:
             try:
                 response.raise_for_status()
                 complaint_dict = await response.json()

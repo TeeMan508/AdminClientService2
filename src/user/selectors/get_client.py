@@ -1,6 +1,7 @@
 from starlette.exceptions import HTTPException
 
 from src.user.logger import logger
+from ..exceptions.base import NoEntityException
 from ..models import Client
 
 
@@ -13,6 +14,6 @@ def get_client_(order_by=None, **filters):
     client: Client = client_qs.first()
 
     if not client:
-        raise HTTPException(status_code=409)
+        raise NoEntityException("Co client found")
 
     return client

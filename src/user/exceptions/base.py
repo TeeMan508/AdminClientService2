@@ -1,0 +1,13 @@
+class BaseException(Exception):
+    ...
+
+
+class AlreadyExistsException(BaseException):
+    ...
+
+class NoEntityException(BaseException):
+    ...
+
+
+class BusyAdminException(BaseException):
+    ...
