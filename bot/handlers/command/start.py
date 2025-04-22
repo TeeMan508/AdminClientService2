@@ -2,20 +2,26 @@ from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
+from aiohttp import ClientSession
 
 from .router import router
 from ...messages import REGISTER_TEXT
+from ...urls import TMP_URL
 
 
 @router.message(Command("start"))
 async def handle_start_command(message: Message, state: FSMContext) -> None:
     if message.from_user is None:
         return
-    builder = InlineKeyboardBuilder()
-    builder.add(InlineKeyboardButton(text="Client", callback_data="register_client"))
-    builder.add(InlineKeyboardButton(text="Admin", callback_data="register_admin"))
 
-    await message.answer(REGISTER_TEXT, reply_markup=builder.as_markup())
+    async with ClientSession() as session:
+        async with session.post(url=TMP_URL, data={"msg": message.text, "client_id": message.from_user.id}) as response:
+            ...
+    # builder = InlineKeyboardBuilder()
+    # builder.add(InlineKeyboardButton(text="Client", callback_data="register_client"))
+    # builder.add(InlineKeyboardButton(text="Admin", callback_data="register_admin"))
+    #
+    # await message.answer(REGISTER_TEXT, reply_markup=builder.as_markup())
 
 
 

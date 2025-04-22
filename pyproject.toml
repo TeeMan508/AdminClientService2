@@ -37,6 +37,9 @@ django-rest-framework = "^0.1.0"
 django-prometheus = "^2.3.1"
 environ = "^1.0"
 psycopg2 = "^2.9.10"
+fastapi = "^0.115.12"
+celery = "^5.5.1"
+requests = "^2.32.3"
 
 [tool.poetry.group.dev.dependencies]
 autoflake = "1.4"

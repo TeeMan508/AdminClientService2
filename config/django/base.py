@@ -30,7 +30,7 @@ ALLOWED_HOSTS = ['web', 'localhost', 'host.docker.internal']
 
 # Application definition
 LOCAL_APPS = ['src.common.apps.CommonConfig',
-              'src.user.apps.UserConfig',
+              # 'src.user.apps.UserConfig',
 ]
 
 THIRD_PARTY_APPS = [
@@ -152,3 +152,6 @@ REST_FRAMEWORK = {
         'rest_framework.parsers.MultiPartParser'
     )
 }
+
+CELERY_BROKER_URL = 'redis://redis:6379'
+CELERY_RESULT_BACKEND = 'redis://redis:6379'
