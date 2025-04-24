@@ -5,14 +5,6 @@ from .views import *
 app_name = 'admin_client_service_api'
 
 urlpatterns = [
-    path("test_api", TmpView.as_view()),
-    # path("register_client", RegisterClientView.as_view()),
-    # path("register_admin", RegisterAdminView.as_view()),
-    # path("set_client_to_admin", SetClientToRandomAdminView.as_view()),
-    # path("free_admin", FreeAdminView.as_view()),
-    # path("clear_client", ClearClientView.as_view()),
-    # path("get_current_client", GetCurrentClientView.as_view()),
-    # path("get_admin", GetAdminByClientView.as_view()),
-    # path("set_next_client", SetNextClientToAdminView.as_view()),
+    path("django_api", MainView.as_view()),
 
 ]

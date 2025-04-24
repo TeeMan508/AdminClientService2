@@ -6,7 +6,7 @@ from aiohttp import ClientSession
 
 from .router import router
 from ...messages import REGISTER_TEXT
-from ...urls import TMP_URL
+from ...urls import SERVICE_URL
 
 
 @router.message(Command("start"))
@@ -14,14 +14,11 @@ async def handle_start_command(message: Message, state: FSMContext) -> None:
     if message.from_user is None:
         return
 
-    async with ClientSession() as session:
-        async with session.post(url=TMP_URL, data={"msg": message.text, "client_id": message.from_user.id}) as response:
-            ...
-    # builder = InlineKeyboardBuilder()
-    # builder.add(InlineKeyboardButton(text="Client", callback_data="register_client"))
-    # builder.add(InlineKeyboardButton(text="Admin", callback_data="register_admin"))
-    #
-    # await message.answer(REGISTER_TEXT, reply_markup=builder.as_markup())
+    builder = InlineKeyboardBuilder()
+    builder.add(InlineKeyboardButton(text="Client", callback_data="register_client"))
+    builder.add(InlineKeyboardButton(text="Admin", callback_data="register_admin"))
+
+    await message.answer(REGISTER_TEXT, reply_markup=builder.as_markup())
 
 
 

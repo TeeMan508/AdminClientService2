@@ -23,7 +23,6 @@ if not settings.BOT_TOKEN:
     sys.exit(1)
 
 RUNNING_MODE = RunningMode.LONG_POLLING
-print(settings.BOT_TOKEN)
 bot = Bot(token=settings.BOT_TOKEN)
 
 dispatcher = Dispatcher(storage=RedisStorage(redis=redis_storage))
@@ -35,8 +34,7 @@ async def set_bot_commands() -> None:
     await bot.set_my_commands(
         [
             BotCommand(command="/start", description="Register the bot"),
-            # BotCommand(command="/id", description="Get the user and chat ids"),
-            # BotCommand(command="/state", description="Get the user and chat ids"),
+            BotCommand(command="/id", description="Get the user and chat ids"),
         ],
     )
 
@@ -44,10 +42,3 @@ async def set_bot_commands() -> None:
 @dispatcher.startup()
 async def on_startup() -> None:
     await set_bot_commands()
-
-
-# async def _start_polling() -> None:
-#     logging.config.dictConfig(LOGGING_CONFIG)
-#     logger.info("Starting polling")
-#
-#     await dispatcher.start_polling(bot, handle_signals=False, allowed_updates=["message", "edited_channel_post", "callback_query"])
