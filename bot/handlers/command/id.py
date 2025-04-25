@@ -3,7 +3,7 @@ from aiogram.types import Message
 from .router import router
 
 
-@router.message(Command(commands=["id"]))
+@router.message(Command("id"))
 async def handle_id_command(message: Message) -> None:
     if message.from_user is None:
         return

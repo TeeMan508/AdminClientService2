@@ -7,13 +7,14 @@ from ..logger import logger
 from ..schemas.send_to_service_request import SendToServiceRequest
 from ..urls import SERVICE_URL
 
-async def send_to_service(data: SendToServiceRequest | None=None, type_: Literal['post', 'get']='post'):
+async def send_to_service(data: SendToServiceRequest | None = None, type_: Literal['post', 'get']='post'):
     async with ClientSessionCorId() as session:
         if type_ == 'post':
             if not data:
                 raise ValueError('Data cannot be empty on post request')
 
-            async with session.post(SERVICE_URL, data=data.model_dump()) as response:
+            body = {k: v for k, v in data.model_dump().items() if v is not None}
+            async with session.post(SERVICE_URL, data=body) as response:
                 response.raise_for_status()
                 return await response.json()
 

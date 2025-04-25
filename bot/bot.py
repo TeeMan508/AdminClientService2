@@ -9,7 +9,7 @@ from config.settings.settings import settings
 
 from bot.handlers.command.router import router as command_router
 from bot.handlers.callback.router import router as callback_router
-from .logger import logger, LOGGING_CONFIG
+from .logger import logger
 from .storage.redis import redis_storage
 
 

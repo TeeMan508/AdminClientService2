@@ -1,8 +1,12 @@
+import logging
 import os
 
 from celery import Celery
 from django.conf import settings
 
+from worker.logger import LOGGING_CONFIG
+
+# logging.config.dictConfig(LOGGING_CONFIG)
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.django.base')
 
 app = Celery('service')

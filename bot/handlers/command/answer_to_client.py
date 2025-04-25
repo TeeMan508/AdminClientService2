@@ -3,6 +3,7 @@ from aiogram.types import Message
 
 from bot.handlers.callback.client import ClientState
 from bot.handlers.command.router import router
+from bot.logger import logger
 from bot.messages import REGISTER_CLIENT_MSG
 from bot.schemas.send_to_service_request import SendToServiceRequest
 from bot.utils.send_to_service import send_to_service
@@ -19,7 +20,9 @@ async def register_complaint(message: Message, state: FSMContext) -> None:
          "complaint": message.text,
          }
     )
+    logger.info("Register client request sent")
+
     await send_to_service(data)
 
-    await message.answer(REGISTER_CLIENT_MSG)
+    # await message.answer(REGISTER_CLIENT_MSG)
 

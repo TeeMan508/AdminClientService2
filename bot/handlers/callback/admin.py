@@ -29,10 +29,11 @@ async def register_admin(callback_query: CallbackQuery, state: FSMContext):
         {"tg_id": str(callback_query.message.chat.id),
          }
     )
+    logger.info("Register admin request sent")
     await send_to_service(data)
 
     await state.set_state(AdminState.active)
-    await callback_query.message.edit_text(REGISTER_ADMIN_MSG)
+    # await callback_query.message.edit_text(REGISTER_ADMIN_MSG)
     try:
         await callback_query.message.edit_reply_markup(None)
     except TelegramBadRequest:
