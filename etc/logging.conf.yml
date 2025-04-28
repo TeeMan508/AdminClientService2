@@ -5,8 +5,6 @@ formatters:
         (): bot.logger.ConsoleFormatter
     console_formatter_backend:
         (): src.api.logger.ConsoleFormatter
-    console_formatter_worker:
-        (): worker.logger.ConsoleFormatter
 handlers:
     console_handler_bot:
         class: logging.StreamHandler
@@ -16,10 +14,6 @@ handlers:
         class: logging.StreamHandler
         level: INFO
         formatter: console_formatter_backend
-    console_handler_worker:
-        class: logging.StreamHandler
-        level: INFO
-        formatter: console_formatter_worker
 loggers:
     root:
         level: INFO
@@ -31,8 +25,4 @@ loggers:
     web:
         level: INFO
         handlers: [console_handler_backend]
-        propagate: no
-    worker:
-        level: INFO
-        handlers: [console_handler_worker]
         propagate: no

@@ -5,6 +5,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .logger import logger, correlation_id_ctx
+from ..metrics import TOTAL_REQ
 
 from ..user.exceptions.base import NoEntityException, BusyAdminException
 from ..user.facades import client__set_to_random_admin, admin__get_current_client
@@ -19,6 +20,7 @@ from ..user.tasks.send_message import send_message
 
 class MainView(APIView):
     def post(self, request: Request): # noqa
+        TOTAL_REQ.inc()
         try:
             correlation_id_ctx.set(request.META.get('HTTP_X_CORRELATION_ID'))
 

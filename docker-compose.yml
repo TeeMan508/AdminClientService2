@@ -15,7 +15,6 @@ services:
     build:
       dockerfile: Dockerfile
       context: .
-#    command: python -m bot
     command: uvicorn bot.app:create_app --factory --port 8050 --workers=1 --host 0.0.0.0
     volumes:
       - ./:/code/
@@ -50,20 +49,34 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-#    hostname: worker
-#    entrypoint: celery
     command: ['celery', '-A','worker.celery_app.app', 'worker', '-l', 'info']
     volumes:
       - ./:/code
     depends_on:
       - redis
-#  prometheus:
-#    image: prom/prometheus
-#    container_name: prometheus
-#    command:
-#      - "--config.file=/code/prometheus_config.yml"
-#    ports:
-#      - "9090:9090"
-#    restart: unless-stopped
-#    volumes:
-#      - ./etc/prometheus_config.yml:/code/prometheus_config.yml
+
+  exporter:
+    image: danihodovic/celery-exporter
+    ports:
+      - "9808:9808"
+    command:
+      - "--broker-url=redis://redis:6379"
+
+  prometheus:
+    image: prom/prometheus
+    command:
+      - "--config.file=/code/prometheus_config.yml"
+    ports:
+      - "9090:9090"
+    restart: unless-stopped
+    volumes:
+      - ./etc/prometheus_config.yml:/code/prometheus_config.yml
+
+  grafana:
+    image: grafana/grafana-enterprise
+    restart: unless-stopped
+    ports:
+      - '3000:3000'
+    volumes:
+      - ./etc/grafana.ini:/code/grafana.ini
+    command: ['--config', '/code/grafana.ini']
